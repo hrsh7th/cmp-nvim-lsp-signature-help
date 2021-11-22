@@ -9,12 +9,14 @@ source.is_available = function(self)
 end
 
 source.get_keyword_pattern = function(self)
-  local trigger_characters = self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}
-  return ([=[\%%(\V%s\m\)\s*\zs]=]):format(table.concat(trigger_characters, [[\m\|\V]]))
+  return ([=[\%%(\V%s\m\)\s*\zs]=]):format(table.concat(self:get_trigger_characters(), [[\m\|\V]]))
 end
 
 source.get_trigger_characters = function(self)
-  local trigger_characters = self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}
+  local trigger_characters = {}
+  for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
+    table.insert(trigger_characters, c)
+  end
   table.insert(trigger_characters, ' ')
   return trigger_characters
 end
