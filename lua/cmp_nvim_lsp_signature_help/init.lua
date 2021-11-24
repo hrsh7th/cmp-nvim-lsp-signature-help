@@ -55,7 +55,7 @@ source._item = function(self, response)
   if not signature then
     return {}
   end
-  local parameters = signature.parameters or {}
+  local parameters = signature.parameters
   if not parameters then
     return {}
   end
