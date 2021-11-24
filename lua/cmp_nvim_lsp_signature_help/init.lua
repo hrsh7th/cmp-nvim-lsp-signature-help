@@ -66,6 +66,9 @@ source._item = function(self, response)
       table.insert(arguments, self:_parameter_label(signature, parameter))
     end
   end
+  if #arguments == 0 then
+    return {}
+  end
   return {
     {
       label = table.concat(arguments, ', '),
