@@ -39,8 +39,9 @@ source.complete = function(self, params, callback)
 
   local request = vim.lsp.util.make_position_params()
   request.context = {
-    triggerKind = 2,
+    triggerKind = 1,
     triggerCharacter = trigger_character,
+    isRetrigger = false,
   }
   client.request('textDocument/signatureHelp', request, function(_, res)
     callback({
