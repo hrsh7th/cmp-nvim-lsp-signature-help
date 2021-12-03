@@ -1,7 +1,9 @@
 local source = {}
 
 source.new = function()
-  return setmetatable({}, { __index = source })
+  return setmetatable({
+    signature_help = nil,
+  }, { __index = source })
 end
 
 source.is_available = function(self)
@@ -17,13 +19,22 @@ source.get_trigger_characters = function(self)
   for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
     table.insert(trigger_characters, c)
   end
+  for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'retriggerCharacters' }) or {}) do
+    table.insert(trigger_characters, c)
+  end
   table.insert(trigger_characters, ' ')
   return trigger_characters
 end
 
 source.complete = function(self, params, callback)
   local client = self:_get_client()
-  local trigger_characters = self:_get(client.server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}
+  local trigger_characters = {}
+  for _, c in ipairs(self:_get(client.server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
+    table.insert(trigger_characters, c)
+  end
+  for _, c in ipairs(self:_get(client.server_capabilities, { 'signatureHelpProvider', 'retriggerCharacters' }) or {}) do
+    table.insert(trigger_characters, c)
+  end
 
   local trigger_character = nil
   for _, c in ipairs(trigger_characters) do
@@ -39,37 +50,48 @@ source.complete = function(self, params, callback)
 
   local request = vim.lsp.util.make_position_params()
   request.context = {
-    triggerKind = 1,
+    triggerKind = 2,
     triggerCharacter = trigger_character,
-    isRetrigger = false,
+    isRetrigger = not not self.signature_help,
+    activeSignatureHelp = self.signature_help,
   }
   client.request('textDocument/signatureHelp', request, function(_, res)
+    self.signature_help = res
     callback({
       isIncomplete = true,
-      items = self:_item(res),
+      items = self:_item(self.signature_help),
     })
   end)
 end
 
-source._item = function(self, response)
-  local signature = ((response or {}).signatures or {})[1]
+source._item = function(self, signature_help)
+  if not signature_help then
+    return {}
+  end
+
+  local signature = signature_help.signatures[1]
   if not signature then
     return {}
   end
+
   local parameters = signature.parameters
   if not parameters then
     return {}
   end
-  local parameter_index = 1 + (signature.activeParameter or 0)
+
+  local parameter_index = signature.activeParameter and signature.activeParameter + 1
+
   local arguments = {}
   for i, parameter in ipairs(parameters) do
-    if i == parameter_index then
+    if i == parameter_index or not parameter_index then
       table.insert(arguments, self:_parameter_label(signature, parameter))
     end
   end
+
   if #arguments == 0 then
     return {}
   end
+
   return {
     {
       label = table.concat(arguments, ', '),
@@ -100,10 +122,12 @@ end
 
 source._signature_label = function(self, signature, parameter_index)
   local label = signature.label
-  local s, e = string.find(label, self:_parameter_label(signature, signature.parameters[parameter_index]), 1, true)
-  if s and e then
-    local active = string.sub(label, s, e)
-    label = string.gsub(label, vim.pesc(active), '__' .. active .. '__')
+  if parameter_index then
+    local s, e = string.find(label, self:_parameter_label(signature, signature.parameters[parameter_index]), 1, true)
+    if s and e then
+      local active = string.sub(label, s, e)
+      label = string.gsub(label, vim.pesc(active), '__' .. active .. '__')
+    end
   end
   return label
 end
