@@ -48,7 +48,7 @@ source.complete = function(self, params, callback)
     return callback({ isIncomplete = true })
   end
 
-  local request = vim.lsp.util.make_position_params()
+  local request = vim.lsp.util.make_position_params(0, self:_get_client().offset_encoding)
   request.context = {
     triggerKind = 2,
     triggerCharacter = trigger_character,
