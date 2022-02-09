@@ -59,27 +59,38 @@ source.complete = function(self, params, callback)
     self.signature_help = res
     callback({
       isIncomplete = true,
-      items = self:_item(self.signature_help),
+      items = self:_items(self.signature_help),
     })
   end)
 end
 
-source._item = function(self, signature_help)
+source._items = function(self, signature_help)
   if not signature_help then
     return {}
   end
 
-  local signature = signature_help.signatures[1]
-  if not signature then
-    return {}
+  local parameter_index = signature_help.activeParameter and signature_help.activeParameter + 1
+  local items = {}
+
+  for _, signature in ipairs(signature_help.signatures) do
+    local item = self:_item(signature, parameter_index)
+    if item then
+      table.insert(items, item)
+    end
   end
 
+  return items
+end
+
+source._item = function(self, signature, parameter_index)
   local parameters = signature.parameters
   if not parameters then
-    return {}
+    return nil
   end
 
-  local parameter_index = signature.activeParameter and signature.activeParameter + 1
+  if signature.activeParameter then
+    parameter_index = signature.activeParameter + 1
+  end
 
   local arguments = {}
   for i, parameter in ipairs(parameters) do
@@ -89,17 +100,15 @@ source._item = function(self, signature_help)
   end
 
   if #arguments == 0 then
-    return {}
+    return nil
   end
 
   return {
-    {
-      label = table.concat(arguments, ', '),
-      filterText = '',
-      insertText = '',
-      preselect = 1,
-      documentation = self:_docs(signature, parameter_index),
-    }
+    label = table.concat(arguments, ', '),
+    filterText = '',
+    insertText = '',
+    preselect = 1,
+    documentation = self:_docs(signature, parameter_index),
   }
 end
 
