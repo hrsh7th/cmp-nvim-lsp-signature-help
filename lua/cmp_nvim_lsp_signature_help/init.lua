@@ -1,3 +1,5 @@
+local cmp = require('cmp')
+
 local source = {}
 
 source.new = function()
@@ -27,6 +29,10 @@ source.get_trigger_characters = function(self)
 end
 
 source.complete = function(self, params, callback)
+  if params.context:get_reason() == cmp.ContextReason.TriggerOnly then
+    return callback()
+  end
+
   local client = self:_get_client()
   local trigger_characters = {}
   for _, c in ipairs(self:_get(client.server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
