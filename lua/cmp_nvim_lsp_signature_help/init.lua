@@ -112,7 +112,7 @@ source._item = function(self, signature, parameter_index)
 
   return {
     label = table.concat(arguments, ', '),
-    filterText = '',
+    filterText = ' ',
     insertText = '',
     preselect = 1,
     documentation = self:_docs(signature, parameter_index),
