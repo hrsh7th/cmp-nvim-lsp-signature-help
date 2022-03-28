@@ -76,8 +76,8 @@ source._items = function(self, signature_help)
   end
 
   local parameter_index = signature_help.activeParameter and signature_help.activeParameter + 1
-  local items = {}
 
+  local items = {}
   for _, signature in ipairs(signature_help.signatures) do
     local item = self:_item(signature, parameter_index)
     if item then
@@ -94,13 +94,14 @@ source._item = function(self, signature, parameter_index)
     return nil
   end
 
-  if signature.activeParameter then
-    parameter_index = signature.activeParameter + 1
+  -- @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
+  if not parameter_index or #parameters < parameter_index then
+    parameter_index = 1
   end
 
   local arguments = {}
   for i, parameter in ipairs(parameters) do
-    if i == parameter_index or not parameter_index then
+    if i == parameter_index then
       table.insert(arguments, self:_parameter_label(signature, parameter))
     end
   end
