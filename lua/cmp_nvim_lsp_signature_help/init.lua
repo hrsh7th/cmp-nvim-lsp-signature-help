@@ -29,10 +29,6 @@ source.get_trigger_characters = function(self)
 end
 
 source.complete = function(self, params, callback)
-  if params.context:get_reason() == cmp.ContextReason.TriggerOnly then
-    return callback()
-  end
-
   local client = self:_get_client()
   local trigger_characters = {}
   for _, c in ipairs(self:_get(client.server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
@@ -46,7 +42,7 @@ source.complete = function(self, params, callback)
   for _, c in ipairs(trigger_characters) do
     local s, e = string.find(params.context.cursor_before_line, '(' .. vim.pesc(c) .. ')%s*$')
     if s and e then
-      trigger_character = string.sub(params.context.cursor_before_line, s, e)
+      trigger_character = string.sub(params.context.cursor_before_line, s, s)
       break
     end
   end
@@ -61,8 +57,14 @@ source.complete = function(self, params, callback)
     isRetrigger = not not self.signature_help,
     activeSignatureHelp = self.signature_help,
   }
-  client.request('textDocument/signatureHelp', request, function(_, res)
-    self.signature_help = res
+  client.request('textDocument/signatureHelp', request, function(_, signature_help)
+    self.signature_help =  signature_help
+
+    if not signature_help then
+      return callback({ isIncomplete = true })
+    end
+
+    self.signature_help.activeSignature = self.signature_help.activeSignature or 0
     callback({
       isIncomplete = true,
       items = self:_items(self.signature_help),
@@ -75,11 +77,9 @@ source._items = function(self, signature_help)
     return {}
   end
 
-  local parameter_index = signature_help.activeParameter and signature_help.activeParameter + 1
-
   local items = {}
   for _, signature in ipairs(signature_help.signatures) do
-    local item = self:_item(signature, parameter_index)
+    local item = self:_item(signature, signature_help.activeParameter)
     if item then
       table.insert(items, item)
     end
@@ -94,8 +94,10 @@ source._item = function(self, signature, parameter_index)
     return nil
   end
 
+  parameter_index = (signature.activeParameter or parameter_index or 0) + 1
+
   -- @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
-  if not parameter_index or #parameters < parameter_index then
+  if #parameters < parameter_index then
     parameter_index = 1
   end
 
