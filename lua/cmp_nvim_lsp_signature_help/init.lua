@@ -73,7 +73,7 @@ source.complete = function(self, params, callback)
 end
 
 source._items = function(self, signature_help)
-  if not signature_help then
+  if not signature_help or not signature_help.signatures then
     return {}
   end
 
