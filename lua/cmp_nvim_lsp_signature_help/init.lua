@@ -18,10 +18,12 @@ end
 
 source.get_trigger_characters = function(self)
   local trigger_characters = {}
-  for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
+  for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' })
+    or {}) do
     table.insert(trigger_characters, c)
   end
-  for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'retriggerCharacters' }) or {}) do
+  for _, c in ipairs(self:_get(self:_get_client().server_capabilities, { 'signatureHelpProvider', 'retriggerCharacters' })
+    or {}) do
     table.insert(trigger_characters, c)
   end
   table.insert(trigger_characters, ' ')
@@ -58,7 +60,7 @@ source.complete = function(self, params, callback)
     activeSignatureHelp = self.signature_help,
   }
   client.request('textDocument/signatureHelp', request, function(_, signature_help)
-    self.signature_help =  signature_help
+    self.signature_help = signature_help
 
     if not signature_help then
       return callback({ isIncomplete = true })
@@ -124,28 +126,50 @@ end
 source._docs = function(self, signature, parameter_index)
   local documentation = {}
 
+  -- signature label.
   if signature.label then
     table.insert(documentation, self:_signature_label(signature, parameter_index))
-    table.insert(documentation, '----')
   end
 
-  if type(signature.documentation) == 'table' then
-    table.insert(documentation, signature.documentation.value)
-  elseif signature.documentation then
-    table.insert(documentation, signature.documentation)
+  -- parameter docs.
+  local parameter = signature.parameters[parameter_index]
+  if parameter then
+    if parameter.documentation then
+      table.insert(documentation, '---')
+      if type(parameter.documentation) == 'table' then
+        table.insert(documentation, '```' .. parameter.documentation.kind)
+        table.insert(documentation, parameter.documentation.value)
+        table.insert(documentation, '```')
+      else
+        table.insert(documentation, parameter.documentation)
+      end
+    end
   end
+
+  -- signature docs.
+  if signature.documentation then
+    table.insert(documentation, '---')
+    if type(signature.documentation) == 'table' then
+      table.insert(documentation, '```' .. signature.documentation.kind)
+      table.insert(documentation, signature.documentation.value)
+      table.insert(documentation, '```')
+    else
+      table.insert(documentation, signature.documentation)
+    end
+  end
+
+  print(vim.inspect(documentation))
 
   return { kind = 'markdown', value = table.concat(documentation, '\n') }
 end
 
-source._signature_label = function(_, signature, parameter_index)
+source._signature_label = function(self, signature, parameter_index)
   local label = signature.label
   if parameter_index then
-    local doc = signature.parameters[parameter_index].documentation
-    if doc.value then
-      label = doc.value
-    else
-      label = doc
+    local s, e = string.find(label, self:_parameter_label(signature, signature.parameters[parameter_index]), 1, true)
+    if s and e then
+      local active = string.sub(label, s, e)
+      label = string.gsub(label, vim.pesc(active), '***' .. active .. '***')
     end
   end
   return label
