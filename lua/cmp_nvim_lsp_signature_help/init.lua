@@ -138,13 +138,14 @@ source._docs = function(self, signature, parameter_index)
   return { kind = 'markdown', value = table.concat(documentation, '\n') }
 end
 
-source._signature_label = function(self, signature, parameter_index)
+source._signature_label = function(_, signature, parameter_index)
   local label = signature.label
   if parameter_index then
-    local s, e = string.find(label, self:_parameter_label(signature, signature.parameters[parameter_index]), 1, true)
-    if s and e then
-      local active = string.sub(label, s, e)
-      label = string.gsub(label, vim.pesc(active), '***' .. active .. '***')
+    local doc = signature.parameters[parameter_index].documentation
+    if doc.value then
+      label = doc.value
+    else
+      label = doc
     end
   end
   return label
