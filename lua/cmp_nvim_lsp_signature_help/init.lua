@@ -158,8 +158,6 @@ source._docs = function(self, signature, parameter_index)
     end
   end
 
-  print(vim.inspect(documentation))
-
   return { kind = 'markdown', value = table.concat(documentation, '\n') }
 end
 
