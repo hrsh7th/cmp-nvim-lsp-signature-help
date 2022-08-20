@@ -114,11 +114,12 @@ source._item = function(self, signature, parameter_index)
     return nil
   end
 
+  local label = table.concat(arguments, ', ')
   return {
-    label = table.concat(arguments, ', '),
+    label = label,
     filterText = ' ',
-    insertText = '',
-    preselect = 1,
+    insertText = self:_matchstr(label, [[\k\+]]),
+    preselect = true,
     documentation = self:_docs(signature, parameter_index),
   }
 end
@@ -202,6 +203,14 @@ source._get = function(_, root, paths)
     end
   end
   return c
+end
+
+source._matchstr = function(_, str, pattern)
+  local s, e = vim.regex(pattern):match_str(str)
+  if s and e then
+    return string.sub(str, s+1, e)
+  end
+  return ''
 end
 
 return source
