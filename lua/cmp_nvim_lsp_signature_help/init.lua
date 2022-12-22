@@ -100,7 +100,9 @@ source._item = function(self, signature, parameter_index)
 
   -- @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
   if #parameters < parameter_index then
-    parameter_index = 1
+    return {
+      label = 'No more params',
+    }
   end
 
   local arguments = {}
