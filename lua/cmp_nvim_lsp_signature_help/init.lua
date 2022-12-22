@@ -115,6 +115,9 @@ source._item = function(self, signature, parameter_index)
   end
 
   local label = table.concat(arguments, ', ')
+  if parameter_index == #parameters then
+    label = label .. ' (Last)'
+  end
   return {
     label = label,
     filterText = ' ',
