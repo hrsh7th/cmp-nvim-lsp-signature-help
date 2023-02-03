@@ -99,7 +99,7 @@ source._item = function(self, signature, parameter_index)
   parameter_index = (signature.activeParameter or parameter_index or 0) + 1
 
   -- @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
-  if #parameters < parameter_index then
+  if #parameters < parameter_index or parameter_index < 1 then
     parameter_index = 1
   end
 
