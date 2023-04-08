@@ -120,7 +120,7 @@ source._item = function(self, signature, parameter_index)
     filterText = ' ',
     insertText = self:_matchstr(label, [[\k\+]]),
     word = '',
-    preselect = true,
+    preselect = false,
     documentation = self:_docs(signature, parameter_index),
   }
 end
