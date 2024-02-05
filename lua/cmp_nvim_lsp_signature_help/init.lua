@@ -125,51 +125,39 @@ source._item = function(self, signature, parameter_index)
   }
 end
 
-source._docs = function(self, signature, parameter_index)
-  local documentation = {}
+source._docs = function(self, sig, idx)
+  local docs = {}
 
   -- signature label.
-  if signature.label then
-    table.insert(documentation, self:_signature_label(signature, parameter_index))
+  if sig.label then
+    table.insert(docs, table.concat(
+      vim.lsp.util.convert_input_to_markdown_lines(self:_signature_label(sig, idx)), "\n"))
   end
 
   -- parameter docs.
-  local parameter = signature.parameters[parameter_index]
+  local parameter = sig.parameters[idx]
   if parameter then
     if parameter.documentation then
-      table.insert(documentation, '---')
-      if type(parameter.documentation) == 'table' then
-        table.insert(documentation, '```' .. parameter.documentation.kind)
-        table.insert(documentation, parameter.documentation.value)
-        table.insert(documentation, '```')
-      else
-        table.insert(documentation, parameter.documentation)
-      end
+      table.insert(docs, table.concat(
+        vim.lsp.util.convert_input_to_markdown_lines(parameter.documentation), "\n"))
     end
   end
 
   -- signature docs.
-  if signature.documentation then
-    table.insert(documentation, '---')
-    if type(signature.documentation) == 'table' then
-      table.insert(documentation, '```' .. signature.documentation.kind)
-      table.insert(documentation, signature.documentation.value)
-      table.insert(documentation, '```')
-    else
-      table.insert(documentation, signature.documentation)
-    end
+  if sig.documentation then
+    table.insert(docs,
+      table.concat(vim.lsp.util.convert_input_to_markdown_lines(sig.documentation), "\n"))
   end
 
-  return { kind = 'markdown', value = table.concat(documentation, '\n') }
+  return {kind = 'markdown', value = table.concat(docs, '\n\n')}
 end
-
 source._signature_label = function(self, signature, parameter_index)
   local label = signature.label
   if parameter_index then
     local s, e = string.find(label, self:_parameter_label(signature, signature.parameters[parameter_index]), 1, true)
     if s and e then
       local active = string.sub(label, s, e)
-      label = string.gsub(label, vim.pesc(active), '***' .. active .. '***')
+      label = string.gsub(label, vim.pesc(active), "`" .. active .. "`")
     end
   end
   return label
