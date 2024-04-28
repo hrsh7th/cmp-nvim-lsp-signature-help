@@ -32,13 +32,7 @@ end
 
 source.complete = function(self, params, callback)
   local client = self:_get_client()
-  local trigger_characters = {}
-  for _, c in ipairs(self:_get(client.server_capabilities, { 'signatureHelpProvider', 'triggerCharacters' }) or {}) do
-    table.insert(trigger_characters, c)
-  end
-  for _, c in ipairs(self:_get(client.server_capabilities, { 'signatureHelpProvider', 'retriggerCharacters' }) or {}) do
-    table.insert(trigger_characters, c)
-  end
+  local trigger_characters = self:get_trigger_characters()
 
   local trigger_character = nil
   for _, c in ipairs(trigger_characters) do
