@@ -187,7 +187,8 @@ source._parameter_label = function(_, signature, parameter)
 end
 
 source._get_client = function(self)
-  for _, client in pairs(vim.lsp.buf_get_clients()) do
+  local get_clients = vim.lsp.get_clients or vim.lsp.buf_get_clients
+  for _, client in pairs(get_clients()) do
     if self:_get(client.server_capabilities, { 'signatureHelpProvider' }) then
       return client
     end
