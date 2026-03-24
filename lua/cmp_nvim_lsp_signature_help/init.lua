@@ -96,7 +96,9 @@ source._item = function(self, signature, parameter_index)
     return nil
   end
 
-  parameter_index = (signature.activeParameter or parameter_index or 0) + 1
+  local ap = signature.activeParameter ~= vim.NIL and signature.activeParameter or nil
+  parameter_index = parameter_index ~= vim.NIL and parameter_index or nil
+  parameter_index = (ap or parameter_index or 0) + 1
 
   -- @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#signatureHelp
   if #parameters < parameter_index or parameter_index < 1 then
