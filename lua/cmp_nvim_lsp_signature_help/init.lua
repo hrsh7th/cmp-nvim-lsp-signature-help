@@ -75,7 +75,7 @@ source.complete = function(self, params, callback)
 end
 
 source._items = function(self, signature_help)
-  if not signature_help or not signature_help.signatures then
+  if not signature_help or type(signature_help.signatures) ~= 'table' then
     return {}
   end
 
